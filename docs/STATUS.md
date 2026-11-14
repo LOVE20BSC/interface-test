@@ -63,6 +63,7 @@ M0 范围共 6 项（[m0-scope](product/m0-scope.md)「范围内」）。✅ 完
 - **不可用**：DSH 自带 Node **v24.21.0**（`~/.dsh/dsh-runtimes/dsh-primary-runtime/dependencies/node/bin/node`）。加载 rollup 原生二进制失败：`dlopen(.../@rollup/rollup-darwin-arm64/rollup.darwin-arm64.node) … code signature … different Team IDs`。同一 `.node` 在系统 Node 下加载正常。**install / build 一律用系统 Node，不要用 DSH 运行时。**
 - 代码地图：`src/` 分层 `app → pages → widgets → features → entities → shared`，`domain`/`config` 为叶子；ESLint + `src/architecture.test.ts` 双重强制，详见 [README](../README.md) §Layout。
 - 工作区：HEAD 以 `git rev-parse HEAD` 为准；本轮改动前工作区干净。`dist/`、`dist-*/`、`.build-id`、`.research/` 均被 gitignore。
+- **兄弟仓改动会打断本地链时改用「钉版」**：`../anvil` 新增 `siblings.lock`（七个兄弟仓的 `url` + `sha`，基线取上次成功导出的 `sources.*.head`）与 `make pin` / `pin-status` / `unpin`；`make bootstrap PINNED=1 PORT=<port>` 用 `.siblings-pinned/` 里只读的 `git worktree` 快照编译，默认 `PINNED=0` 仍走 `.siblings/` 软链、行为不变。2026-11-14 在 owner 正改 core `IStake.stakeLiquidity`（live core 编译不过）时，`PINNED=1` 在 8580 上两次 bootstrap 产出的 `export/deployments/anvil31337_dev.json` 与仓库已提交版本 sha256 均为 `9e811d4d…c44c`（逐字节相同），随后 `make stop PORT=8580`；bump 流程见 `../anvil/README.md`「Pinned siblings」。
 
 ## 4. 常用命令
 
