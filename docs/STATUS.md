@@ -19,7 +19,7 @@ M0 范围共 6 项（[m0-scope](product/m0-scope.md)「范围内」）。✅ 完
 | 5 | 一条命令起全栈 | ✅ | [ADR-0004](adr/0004-anvil-local-chain.md)；clean bootstrap 两次导出同 sha256；本次 `cast chain-id`=31337，`merkleRoot` 与快照一致；前端地址簿由 `pnpm sync:anvil` 生成 |
 | 6 | 文案纪律落地 | ✅ | 所有中文进 `src/shared/config/copy.ts`（生成的错误文案除外），`src/architecture.test.ts` 强制；`7dc0949`；对照 [GLOSSARY](../GLOSSARY.md) |
 | — | M0 验收报告 | ✅ | [m0-acceptance](product/m0-acceptance.md)（14 步 + 证据；§3 的 O1–O4 已修复复核，见 §3.1） |
-| — | E2E 100 条 | ✅ | `e2e/*.spec.ts` 合计 100 个 `test()`；跑在独立 **8555** 链（`pnpm e2e` 自举/复用），按文件 `anvil_snapshot`/`anvil_revert` 隔离；**2026-11-14 第二轮整改（owner 逐条意见）合并后权威跑 95/95 全绿**（§6.1）。2026-11-14 兑换四缺陷修复新增 5 条：`e2e/swap-slow-wallet.spec.ts` 3 条（慢钱包 + 钱包 nonce 领先链上的「卡在钱包里」复现、修复后首笔一次成功、回执关闭后第二笔真实成交）+ `e2e/swap.spec.ts` 2 条（选择器互斥、到账侧余额）；该 3 个 spec 在本机 8583 验证链上 **16/16 + tx-recovery 1/1 全绿**（`E2E_PORT=4189`） |
+| — | E2E 130 条 | ✅ | `e2e/*.spec.ts` 合计 130 个 `test()`；跑在独立 **8555** 链，按文件 `anvil_snapshot`/`anvil_revert` 隔离；**2026-11-15 逐模块 QA（26 条缺陷修复 + 精度统一 + anvil 钉版 siblings）合并后在钉版链上连跑两遍 130/130 全绿**（§3.3 钉版用法） |
 | — | 首页身份读取状态 | ✅ | `loading` / `error` / `unconfigured` 不再只剩问候：骨架卡、错误卡 +「重试」、未部署说明；无身份与未选择卡不变；[m0-ux-spec](product/m0-ux-spec.md) §3.1 · `home-identity-error.png` / `home-no-identity.png` |
 | — | 主题（浅色/深色） | ✅ | [ADR-0005](adr/0005-color-tokens-and-theme.md)；`/theme` 应用目录「设置」分类、`requires: null`；两套语义 token 在 `src/index.css`（深色币安配色 canvas `#0B0E11` / surface `#1E2329` / brand `#FCD535`）；`index.html` 首帧前应用 `love20:theme`；全仓清掉 49 处硬编码色类；配色三线 [three-line/theme.md](product/three-line/theme.md)；`e2e/theme-colors.spec.ts` |
 | — | 应用·代币转账 | ✅ | `/transfer` 应用目录「代币」分类、`requires: null`（普通转账不依赖协议合约）；代币 = 原生币 / Launch 社区代币分页+搜索 / WETH / LP（地址簿 `pair`）/ 自定义 ERC20（校验 bytecode + 读 symbol/decimals）；收款方 = 地址或按身份 NFT（复用转让页的 ownerOf/memberId 解析 + ID 确认）；已知合约收款强制二次确认、任意合约警告；ERC20 直接 `transfer`（界面无授权）、原生币普通转账；`tx-watch` 90s 有界 + 重新查询/重新提交；回执可关闭留在原页；`shared/ui/token-picker.tsx` 从兑换页提升并由两页共用；三线校验 [three-line/transfer.md](product/three-line/transfer.md)（理论 先于实现 → 合约线 `scripts/verify/transfer-contract.mjs` 26/26 → 前端线 `e2e/transfer-numbers.spec.ts`）；截图 12 张 `transfer-{form,protection,receipt}-{light,dark}-{mobile,desktop}.png` |
@@ -76,7 +76,7 @@ M0 范围共 6 项（[m0-scope](product/m0-scope.md)「范围内」）。✅ 完
 | 构建 | `pnpm build` | typecheck → vite → 404/.nojekyll/build-id → 包体门禁；默认 **prod** 变体 |
 | dev 变体构建 | `VITE_ENV=dev pnpm build` | 测包体/本地地址簿时必须显式指定 |
 | 预览产物 | `pnpm preview` | <http://127.0.0.1:4173> |
-| E2E | `pnpm e2e` | Playwright，**52 条**；在独立 **8555** 自动化链上自举/复用（`scripts/e2e-chain.mjs`），`playwright.config.ts` 强制 `VITE_ENV=dev` 并跑 `build && preview`，把解析出的 RPC 作为 `VITE_ANVIL_RPC` 烘进构建 |
+| E2E | `pnpm e2e` | Playwright，**130 条**；在独立 **8555** 自动化链上自举/复用（`scripts/e2e-chain.mjs`），`playwright.config.ts` 强制 `VITE_ENV=dev` 并跑 `build && preview`，把解析出的 RPC 作为 `VITE_ANVIL_RPC` 烘进构建 |
 | 只看 e2e 链 | `pnpm e2e:ensure-chain` | 打印 8555 端点与「自举/复用」结果，不跑测试；`pnpm e2e:reset-chain` 重建 |
 | 格式化 | `pnpm format` / `pnpm format:check` | Prettier |
 | 起人工链（8545） | `make stop && make clean && make bootstrap` | 只从全新链/nonce 0 部署；旧链会被拒绝 |
@@ -134,7 +134,7 @@ CI 环境规则（`.github/workflows/deploy.yml`）：取 `github.repository` �
 | --- | --- | --- |
 | 1 | ✅ 包体保持预算内 | prod gate ≤160 kB（复核 158.3 kB）；dev ≤161 kB（复核 159.2 kB，含 `check-bundle.mjs` 显式 1 kB 部署数据豁免）；不引入 WalletConnect 字节 |
 | 2 | 修三处真机体验：底栏遮挡主按钮、小数位统一、6 字标题不截断 | 按 390×844 重出 `product/screenshots/` 对照图，主按钮完整可见、金额精度有统一规则 |
-| 3 | ✅ E2E 独立链隔离 | 自动化链 8555（`pnpm e2e` 自举/复用，8545 硬拒绝）；按文件快照/回滚；连跑两遍均 **33/33** 且 8545 前后不变（§6.1） |
+| 3 | ✅ E2E 独立链隔离 | 自动化链 8555（`pnpm e2e` 自举/复用，8545 硬拒绝）；按文件快照/回滚；连跑两遍均全绿且 8545 前后不变（§6.1） |
 | 4 | 写 M0 验收报告 | 按 [m0-ux-spec](product/m0-ux-spec.md) §6 的 14 步 + 四个阻塞点逐条附证据（截图/交易哈希/命令输出） |
 | 5 | 发布到 interface-test | 先解决 test 地址来源（合约仓当前只有 `anvil31337_dev` 参数，前端 test 簿仍全 0）→ 干净工作区 + CI 绿 → `pnpm release-to-interface-test`；线上 build id 对应发布 commit |
 | 6 | 之后才是 M1（治理：推举/投票/激励铸造） | CI-001 解除并有 view 级枚举方案；prod 仓 `LOVE20BSC/interface` 到时才创建 |
