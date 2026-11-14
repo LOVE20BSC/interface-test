@@ -497,7 +497,11 @@ test.describe('流动性池 前端线（理论线 §1）', () => {
       await page.getByTestId('liquidity-token-amount').fill('1000');
       await page.getByTestId('liquidity-settings-open').click();
       await page.getByTestId('liquidity-slippage-custom').fill('60');
-      await expect(page.getByText(/自定义值需要在 0\.01% 到 50% 之间/)).toBeVisible();
+      // 弹层里和弹层后面的滑点区块会同时渲染同一条错误（QA D2 要求关闭弹层后错误仍在页面上），
+      // 这里断言弹层内那一条；关掉弹层后再用 testid 断言页面里保留的那一条。
+      await expect(
+        page.getByRole('dialog').getByText(/自定义值需要在 0\.01% 到 50% 之间/),
+      ).toBeVisible();
       await page.getByRole('button', { name: '完成' }).click();
       // QA D2：关掉设置弹层后错误仍要可见，并且授权与提交两个写操作都被挡住。
       await expect(page.getByTestId('liquidity-slippage-error')).toHaveText(

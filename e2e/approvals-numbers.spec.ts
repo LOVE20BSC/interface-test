@@ -90,6 +90,13 @@ async function seedAllowance(spender: `0x${string}`, amount: bigint): Promise<vo
 async function selectTestToken(page: Page): Promise<void> {
   const trigger = page.getByTestId('approvals-token');
   await expect(trigger).toBeVisible({ timeout: 15_000 });
+  // TokenPicker closes itself when an external selection lands (e.g. the page's
+  // default token resolving after a reload). Opening the picker before the page owns
+  // a token would be closed again with the option list gone, so wait for the resolved
+  // balance row (`TestLOVE20 余额 …`) before opening it.
+  await expect(page.getByTestId('approvals-balance')).toHaveText(/^\S+ 余额/, {
+    timeout: 20_000,
+  });
   await trigger.click();
   const option = page.getByTestId(`approvals-token-option-${SYMBOL}`);
   await expect(option).toBeVisible({ timeout: 20_000 });

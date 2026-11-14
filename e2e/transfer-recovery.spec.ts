@@ -312,8 +312,9 @@ test('D1 提交后立即刷新：在途卡恢复、不能再发，链上只有�
   if (send === undefined) return;
   const hash = send.hash as `0x${string}`;
   expect(hash).toMatch(/^0x[0-9a-f]{64}$/i);
-  // pending 卡上写的是同一个哈希（前 10 位），刷新前留证。
-  await expect(pending).toContainText(`${hash.slice(0, 10)}…${hash.slice(-8)}`);
+  // pending 卡上写的是同一个哈希，缩路口径沿用产品既有 `shortenAddress(hash, 10, 8)`：
+  // 前缀是 `0x` + 10 位（共 12 个字符），后缀 8 位。刷新前留证。
+  await expect(pending).toContainText(`${hash.slice(0, 12)}…${hash.slice(-8)}`);
   await shot(page, 'transfer-d1-pending-before-reload.png');
 
   // 关键动作：pending 可见时立刻刷新。
@@ -323,7 +324,7 @@ test('D1 提交后立即刷新：在途卡恢复、不能再发，链上只有�
   // 修复：刷新后恢复同一笔的在途卡，继续 watch 同一个哈希。
   await expect(page.getByTestId('tx-watch-pending')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('tx-watch-pending')).toContainText(
-    `${hash.slice(0, 10)}…${hash.slice(-8)}`,
+    `${hash.slice(0, 12)}…${hash.slice(-8)}`,
   );
   // 在途/已成交时禁止新提交：金额与收款方也一起锁住。
   await expect(page.getByTestId('transfer-submit')).toBeDisabled();

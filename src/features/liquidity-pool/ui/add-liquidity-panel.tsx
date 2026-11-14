@@ -103,12 +103,24 @@ export function AddLiquidityPanel(props: AddLiquidityPanelProps) {
   const tokenAllowanceHub = useTokenAllowance(token.address, account, hub);
   const tokenAllowanceRouter = useTokenAllowance(token.address, account, router);
 
+  /**
+   * The Hub quote is fetched after this closure is created (it needs the parsed
+   * inputs), so the re-read goes through a ref.
+   */
+  const quoteRefetchRef = useRef<() => void>(() => {});
   const refetchAll = () => {
     pool.refetch();
     tokenBalance.refetch();
     nativeBalance.refetch();
     tokenAllowanceHub.refetch();
     tokenAllowanceRouter.refetch();
+    /**
+     * QA: a mined add moves the pool ratio, so the Hub quote — and the
+     * `suggested*Min`/`usable*` numbers the next submit derives from it — must be
+     * re-read. Without this the second consecutive add sent the previous quote's
+     * minimums and the Hub reverted `InsufficientAmountA`.
+     */
+    quoteRefetchRef.current();
   };
   const tx = useLiquidityTransaction(refetchAll);
   const refetchRef = useRef(refetchAll);
@@ -163,6 +175,10 @@ export function AddLiquidityPanel(props: AddLiquidityPanelProps) {
     amountTokenDesired: hubPath ? tokenAmount : 0n,
     amountNativeDesired: hubPath ? nativeAmount : 0n,
     enabled: hubPath && token.address !== undefined && (tokenAmount > 0n || nativeAmount > 0n),
+  });
+
+  useEffect(() => {
+    quoteRefetchRef.current = quote.refetch;
   });
 
   const plan = planDualAdd(reserveToken, reserveNative, totalSupply, tokenAmount, nativeAmount);
